@@ -29,7 +29,8 @@ function main() {
     }];
   });
 
-  writeJson(BANK_FILE, { version: 1, builtAt: new Date().toISOString(), songs: bank }, false);
+  // No timestamp: the file must only change when the songs do, or CI commits it on every run.
+  writeJson(BANK_FILE, { version: 1, songs: bank }, false);
 
   const byGenre = bank.reduce((acc, s) => ({ ...acc, [s.genre]: (acc[s.genre] ?? 0) + 1 }), {});
   console.log(`public/bank.json:${bank.length} 首`, byGenre);
