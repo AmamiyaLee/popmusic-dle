@@ -1,0 +1,86 @@
+# Fetch previews for new songs, test, build and deploy to GitHub Pages.
+#
+# - push to main: fetches only songs missing from data/previews.json
+# - every Monday: refetches every preview (--force), since Apple's URLs expire
+# - manual run: Actions → Deploy → Run workflow (tick "force" to refetch all)
+#
+# When the fetch changes data, the result is committed back to main so the
+# next run starts from it. Pushes made with GITHUB_TOKEN do not trigger
+# workflows, so this cannot loop.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 19 * * 0' # Monday 03:00 Taiwan time
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Refetch every preview URL
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Fetch previews
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.force }}" = "true" ]; then
+            npm run data:fetch -- --force
+          else
+            npm run data:fetch
+          fi
+
+      - run: npm run data:build
+
+      - name: Commit updated song data
+        run: |
+          if git diff --quiet -- data/previews.json public/bank.json; then
+            echo "Song data unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/previews.json public/bank.json
+          git commit -m "chore: update song previews [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - run: npm test
+
+      - run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

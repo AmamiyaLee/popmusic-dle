@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>流行音樂dle · 0.1 秒猜歌</title>
+  <meta name="description" content="只聽 0.1 秒，你猜得出是哪首歌嗎？華語、經典、台語、日文、韓文、西洋歌，免費無限次數的猜歌遊戲。" />
+  <meta name="theme-color" content="#0b0716" />
+  <meta name="color-scheme" content="dark" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23ff3d7f'/%3E%3Cpath d='M12.5 9.6v12.8a1 1 0 0 0 1.5.86l10-6.4a1 1 0 0 0 0-1.72l-10-6.4a1 1 0 0 0-1.5.86z' fill='%2324030f'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="spotlight" aria-hidden="true"></div>
+
+  <button id="menuBtn" class="menu-btn" type="button" aria-label="開啟選單" aria-expanded="false" aria-controls="drawer">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+
+  <div class="layout">
+    <div id="drawer" class="drawer">
+      <aside class="side side-left" aria-label="曲風">
+        <section class="panel">
+          <h2 class="panel-label">曲風</h2>
+          <div id="genreList" class="genre-list" role="radiogroup" aria-label="曲風"></div>
+        </section>
+        <hr class="panel-sep" />
+        <button id="reroll" class="text-btn" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.66-5.66L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.66 5.66L4 15.5M4 20v-4.5h4.5"/></svg>
+          換一首
+        </button>
+      </aside>
+
+      <aside class="side side-right" aria-label="遊戲資訊">
+        <section class="panel">
+          <h2 class="panel-label">戰績</h2>
+          <div id="statTiles" class="stat-tiles"></div>
+          <button id="statsBtn" class="side-btn" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-7"/></svg>
+            完整戰績
+          </button>
+        </section>
+        <hr class="panel-sep" />
+        <section class="panel">
+          <h2 class="panel-label">猜測秒數</h2>
+          <ol id="stepChips" class="step-chips"></ol>
+        </section>
+        <hr class="panel-sep" />
+        <section class="panel">
+          <h2 class="panel-label"><label for="volume">音量</label></h2>
+          <input id="volume" class="volume" type="range" min="0" max="1" step="0.05" />
+        </section>
+      </aside>
+    </div>
+    <div id="scrim" class="scrim" hidden></div>
+
+    <main class="stage" id="game" aria-busy="true">
+      <h1 class="wordmark">流行音樂<span class="wordmark-dle">dle</span></h1>
+
+      <div id="genrePills" class="pills" role="radiogroup" aria-label="曲風"></div>
+
+      <div class="timeline" aria-hidden="true">
+        <div class="timeline-track">
+          <div id="unlocked" class="timeline-unlocked"></div>
+          <div id="playhead" class="timeline-playhead"></div>
+          <div id="ticks" class="timeline-ticks"></div>
+        </div>
+        <div class="timeline-labels"><span id="stepMarker" class="step-marker"></span></div>
+      </div>
+
+      <div id="playRow" class="play-row">
+        <button id="play" class="play" type="button" aria-label="播放" disabled>
+          <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/></svg>
+          <svg class="icon-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" rx="2"/></svg>
+        </button>
+        <span id="clipLabel" class="clip-label">0.1s</span>
+      </div>
+
+      <section id="reveal" class="reveal" hidden aria-live="polite">
+        <img id="cover" class="cover" alt="" width="220" height="220" />
+        <p id="verdict" class="verdict"></p>
+        <h2 id="songTitle" class="song-title"></h2>
+        <p id="songArtist" class="song-artist"></p>
+        <div class="reveal-actions">
+          <button id="next" class="btn-primary" type="button">下一首</button>
+          <div class="reveal-row">
+            <button id="playFull" class="btn-soft" type="button">聽 30 秒</button>
+            <button id="share" class="btn-soft" type="button">挑戰朋友</button>
+            <a id="appleLink" class="btn-soft" target="_blank" rel="noopener">Apple Music ↗</a>
+          </div>
+        </div>
+      </section>
+
+      <form id="guessForm" class="guess" autocomplete="off">
+        <div class="combo">
+          <svg class="combo-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+          <input id="guess" type="text" placeholder="輸入歌名或歌手"
+            role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest"
+            enterkeyhint="send" spellcheck="false" />
+          <ul id="suggest" class="suggest" role="listbox" hidden></ul>
+        </div>
+        <button id="skip" class="skip" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5.5v13l9-6.5zM18 5v14"/></svg>
+          <span id="skipLabel">跳過</span>
+        </button>
+      </form>
+
+      <ol id="attempts" class="attempts" aria-label="猜測紀錄"></ol>
+
+      <p id="status" class="status" role="status"></p>
+    </main>
+  </div>
+
+  <footer class="foot">
+    <span class="foot-note">試聽音訊與專輯封面由 Apple 提供，版權屬原權利人所有；本站不儲存任何音檔</span>
+    <nav class="foot-links">
+      <button id="howtoBtn" type="button">怎麼玩</button>
+    </nav>
+  </footer>
+
+  <dialog id="statsDialog" class="dialog">
+    <form method="dialog">
+      <h2>戰績</h2>
+      <div id="statsBody"></div>
+      <button class="btn-primary" value="close">關閉</button>
+    </form>
+  </dialog>
+
+  <dialog id="howtoDialog" class="dialog">
+    <form method="dialog">
+      <h2>怎麼玩</h2>
+      <ol class="howto">
+        <li><b>聽</b>　按播放，先只聽 0.1 秒，可以重播不限次數。</li>
+        <li><b>猜</b>　輸入歌名或歌手，從清單選一首送出。華語歌請用繁體中文；日韓西洋歌用原文歌名，部分日文歌也接受中文譯名。</li>
+        <li><b>解鎖</b>　猜錯或跳過，就能多聽一點：0.5、2、8、15 秒。</li>
+      </ol>
+      <p class="howto-tip">戴耳機比較容易聽出最短的片段。按空白鍵也可以播放。</p>
+      <button class="btn-primary" value="close">開始玩</button>
+    </form>
+  </dialog>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

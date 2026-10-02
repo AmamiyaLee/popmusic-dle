@@ -1,0 +1,25 @@
+{
+  "name": "popmusic-dle",
+  "version": "0.1.0",
+  "private": true,
+  "description": "華語版 0.1 秒猜歌遊戲",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "data:fetch": "node tools/fetch-previews.mjs",
+    "data:build": "node tools/build-bank.mjs",
+    "data": "npm run data:fetch && npm run data:build"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^5.0.3",
+    "pinyin-pro": "^3.29.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  }
+}
